@@ -43,7 +43,7 @@ class EnergySphere:
                             angle=ang,
                             orbit_radius=float(layer * intensity * 0.08),
                             spin=spin,
-            color=(20, 230, 255) if layer < 30 else (40, 80, 255),
+                            color=(255, 90, 220) if layer < 30 else (255, 40, 160),
                         )
                     )
         self.orbit.update(dt)
@@ -54,17 +54,21 @@ class EnergySphere:
             return
         cx, cy = int(pose.index_tip[0]), int(pose.index_tip[1])
         radius = int(14 + 58 * charge)
-        core = (20, 240, 255)
-        ring = (30, 70, 255)
-        ink = (10, 20, 80)
-        cv2.circle(layer, (cx, cy), radius + 4, ink, 4, cv2.LINE_AA)
-        cv2.circle(layer, (cx, cy), max(4, radius // 5), core, -1, cv2.LINE_AA)
-        cv2.circle(layer, (cx, cy), radius, core, 3, cv2.LINE_AA)
-        cv2.circle(layer, (cx, cy), int(radius * 0.62), ring, 2, cv2.LINE_AA)
-        for i, spin in enumerate((self.time * 2.2, -self.time * 1.6, self.time * 3.1)):
-            for k in range(8):
-                ang = spin + k * (math.pi / 4)
-                dist = radius * (0.45 + 0.18 * i)
+        core = (255, 210, 255)
+        ring = (255, 50, 200)
+        glow = (255, 120, 40)
+        ink = (70, 0, 40)
+        pulse = 1.0 + 0.08 * math.sin(self.time * 8)
+        r = max(8, int(radius * pulse))
+        cv2.circle(layer, (cx, cy), r + 6, ink, 5, cv2.LINE_AA)
+        cv2.circle(layer, (cx, cy), max(5, r // 4), core, -1, cv2.LINE_AA)
+        cv2.circle(layer, (cx, cy), r, glow, 3, cv2.LINE_AA)
+        cv2.circle(layer, (cx, cy), int(r * 0.68), ring, 2, cv2.LINE_AA)
+        cv2.circle(layer, (cx, cy), int(r * 0.38), core, 2, cv2.LINE_AA)
+        for i, spin in enumerate((self.time * 2.6, -self.time * 1.9, self.time * 3.4)):
+            for k in range(10):
+                ang = spin + k * (math.pi / 5)
+                dist = r * (0.42 + 0.2 * i)
                 px = int(cx + math.cos(ang) * dist)
                 py = int(cy + math.sin(ang) * dist)
                 cv2.circle(layer, (px, py), 2 + (i == 0), ring if i else core, -1, cv2.LINE_AA)

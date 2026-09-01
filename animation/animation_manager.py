@@ -115,7 +115,13 @@ class AnimationManager:
                 self.chidori.release(pose, self.charge)
             else:
                 origin = pose.palm if self.active_effect == "magic_portal" else pose.index_tip
-                self.blast.trigger(origin, self.charge)
+                style = {
+                    "energy_sphere": "nova",
+                    "magic_portal": "rift",
+                    "wind_spiral": "cut",
+                    "energy_blast": "fire",
+                }.get(self.active_effect, "fire")
+                self.blast.trigger(origin, self.charge, style=style)
             self.state = RELEASING
             return
 
@@ -137,13 +143,14 @@ class AnimationManager:
         return self.sphere
 
     def render(self, frame: np.ndarray, pose: AnimationPose) -> np.ndarray:
+        dimmed = cv2.convertScaleAbs(frame, alpha=0.46, beta=-22)
         layer = np.zeros_like(frame)
         self._active().draw(layer, pose, self.charge, self.state)
         if self.active_effect not in ("energy_blast", "chidori") and (
             self.blast.active or self.state == RELEASING
         ):
             self.blast.draw(layer, pose, self.charge, self.state)
-        return apply_glow(frame, layer, sigma=10.0, glow_strength=0.85, core_strength=1.12)
+        return apply_glow(dimmed, layer, sigma=10.0, glow_strength=0.95, core_strength=1.18)
 
     def status_text(self) -> str:
         labels = {

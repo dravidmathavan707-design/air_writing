@@ -38,7 +38,7 @@ class MagicPortal:
                     angle=ang,
                     orbit_radius=4.0,
                     spin=2.8,
-                    color=(20, 40, 255),
+                    color=(80, 255, 90) if rng.random() > 0.45 else (255, 220, 40),
                 )
             )
         self.sparks.update(dt)
@@ -49,27 +49,39 @@ class MagicPortal:
         cx, cy = int(pose.palm[0]), int(pose.palm[1])
         radius = int(pose.scale * (0.45 + 0.55 * max(charge, 0.35)))
         rot = pose.angle + self.time
-        colors = ((0, 50, 255), (40, 0, 255), (0, 230, 255))
-        for i, (scale, spin) in enumerate(((1.0, 1.0), (0.72, -1.3), (0.42, 1.8))):
+        colors = ((40, 255, 70), (255, 200, 40), (255, 80, 200))
+        for i, (scale, spin) in enumerate(((1.05, 1.0), (0.78, -1.35), (0.52, 1.9), (0.28, -2.2))):
             r = max(8, int(radius * scale))
+            color = colors[i % 3]
             cv2.ellipse(
                 layer,
                 (cx, cy),
-                (r, int(r * 0.92)),
+                (r, int(r * 0.88)),
                 math.degrees(rot * spin),
                 0,
                 360,
-                colors[i],
-                4,
+                (8, 40, 10),
+                6,
                 cv2.LINE_AA,
             )
-            for k in range(6):
-                ang = rot * spin + k * (math.pi / 3)
+            cv2.ellipse(
+                layer,
+                (cx, cy),
+                (r, int(r * 0.88)),
+                math.degrees(rot * spin),
+                0,
+                360,
+                color,
+                3,
+                cv2.LINE_AA,
+            )
+            for k in range(8):
+                ang = rot * spin + k * (math.pi / 4)
                 px = int(cx + math.cos(ang) * r)
                 py = int(cy + math.sin(ang) * r)
-                cv2.drawMarker(layer, (px, py), colors[i], cv2.MARKER_DIAMOND, 10, 2, cv2.LINE_AA)
-        cv2.circle(layer, (cx, cy), 8, (10, 10, 40), -1, cv2.LINE_AA)
-        cv2.circle(layer, (cx, cy), 5, (0, 220, 255), -1, cv2.LINE_AA)
+                cv2.drawMarker(layer, (px, py), color, cv2.MARKER_STAR, 12, 2, cv2.LINE_AA)
+        cv2.circle(layer, (cx, cy), 10, (10, 40, 8), -1, cv2.LINE_AA)
+        cv2.circle(layer, (cx, cy), 6, (80, 255, 120), -1, cv2.LINE_AA)
         for particle in self.sparks.particles:
             fade = max(0.0, particle.life / particle.max_life)
             cv2.circle(
