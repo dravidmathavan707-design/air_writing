@@ -198,13 +198,16 @@ def _map_mouse(x, y):
 def toggle_fullscreen():
     global fullscreen
     fullscreen = not fullscreen
-    cv2.setWindowProperty(
-        WINDOW_NAME,
-        cv2.WND_PROP_FULLSCREEN,
-        cv2.WINDOW_FULLSCREEN if fullscreen else cv2.WINDOW_NORMAL,
-    )
-    if not fullscreen:
-        cv2.resizeWindow(WINDOW_NAME, CAMERA_WIDTH, CAMERA_HEIGHT)
+    try:
+        cv2.setWindowProperty(
+            WINDOW_NAME,
+            cv2.WND_PROP_FULLSCREEN,
+            cv2.WINDOW_FULLSCREEN if fullscreen else cv2.WINDOW_NORMAL,
+        )
+        if not fullscreen:
+            cv2.resizeWindow(WINDOW_NAME, CAMERA_WIDTH, CAMERA_HEIGHT)
+    except cv2.error:
+        pass
     print("FULLSCREEN" if fullscreen else "WINDOW")
 
 
@@ -293,7 +296,10 @@ def _draw_button(frame, box, label, active, color=None):
     cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
     if active:
         cv2.rectangle(frame, (x1 + 2, y1 + 2), (x2 - 2, y2 - 2), color, 1)
-    draw_text(frame, label, (x1 + 10, y1 + 30), 0.48, color, 2)
+    (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.48, 2)
+    tx = x1 + max(4, (x2 - x1 - tw) // 2)
+    ty = y1 + (y2 - y1 + th) // 2
+    draw_text(frame, label, (tx, ty), 0.48, color, 2)
 
 
 def main():
@@ -493,7 +499,7 @@ def main():
             _blend_rect(frame, 0, 0, width, 112, PANEL, 0.74)
             _blend_rect(frame, 0, height - 128, width, height, PANEL, 0.78)
             extra_row = app_mode in (MODE_ANIMATION, MODE_HERO)
-            _blend_rect(frame, 12, 108, 718, 220 if extra_row else 174, PANEL, 0.58)
+            _blend_rect(frame, 12, 108, 752, 220 if extra_row else 174, PANEL, 0.58)
 
             draw_text(frame, "AIR DRAWING AI", (25, 36), 0.78, TITLE, 2, cv2.FONT_HERSHEY_COMPLEX)
             draw_text(frame, "WELCOME TO CCE_NIT", (620, 36), 0.58, WELCOME, 2, cv2.FONT_HERSHEY_DUPLEX)
