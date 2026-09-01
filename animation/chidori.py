@@ -58,52 +58,53 @@ class Chidori:
         power = max(0.4, min(1.0, charge))
         rng = np.random.default_rng()
         self.firing = True
+        hand = max(70.0, pose.scale)
         # Long spear
         self.bolts.append(
             Bolt(
                 x=cx,
                 y=cy,
-                vx=math.cos(ang) * 980 * power,
-                vy=math.sin(ang) * 980 * power,
+                vx=math.cos(ang) * 1100 * power,
+                vy=math.sin(ang) * 1100 * power,
                 kind="spear",
-                life=0.55,
-                max_life=0.55,
-                length=70 + 90 * power,
-                width=3,
+                life=0.62,
+                max_life=0.62,
+                length=120 + 140 * power + hand * 0.35,
+                width=5,
             )
         )
         # Senbon volley
-        for _ in range(int(10 + 14 * power)):
-            spread = float(rng.uniform(-0.28, 0.28))
+        for _ in range(int(12 + 16 * power)):
+            spread = float(rng.uniform(-0.32, 0.32))
             a = ang + spread
-            spd = float(rng.uniform(640, 1100) * power)
+            spd = float(rng.uniform(720, 1240) * power)
             self.bolts.append(
                 Bolt(
-                    x=cx + _jitter(rng, 8),
-                    y=cy + _jitter(rng, 8),
+                    x=cx + _jitter(rng, 12),
+                    y=cy + _jitter(rng, 12),
                     vx=math.cos(a) * spd,
                     vy=math.sin(a) * spd,
                     kind="senbon",
-                    life=float(rng.uniform(0.28, 0.5)),
-                    max_life=0.5,
-                    length=float(rng.uniform(18, 36)),
-                    width=1,
+                    life=float(rng.uniform(0.32, 0.55)),
+                    max_life=0.55,
+                    length=float(rng.uniform(28, 56) + hand * 0.08),
+                    width=2,
                 )
             )
         # Stream ribbons
-        for k in range(4):
-            a = ang + (k - 1.5) * 0.08
+        for k in range(5):
+            a = ang + (k - 2.0) * 0.09
             self.bolts.append(
                 Bolt(
                     x=cx,
                     y=cy,
-                    vx=math.cos(a) * 720 * power,
-                    vy=math.sin(a) * 720 * power,
+                    vx=math.cos(a) * 820 * power,
+                    vy=math.sin(a) * 820 * power,
                     kind="stream",
-                    life=0.42,
-                    max_life=0.42,
-                    length=110 + 40 * power,
-                    width=2,
+                    life=0.48,
+                    max_life=0.48,
+                    length=170 + 70 * power + hand * 0.4,
+                    width=3,
                 )
             )
 
@@ -112,18 +113,19 @@ class Chidori:
         rng = np.random.default_rng()
         if pose.present and (charge > 0.08 or pose.is_pointing or state in ("charging", "ready")):
             cx, cy = pose.index_tip
-            for _ in range(int(3 + 10 * charge)):
+            reach = 10 + 22 * charge + pose.scale * 0.18
+            for _ in range(int(5 + 14 * charge)):
                 ang = float(rng.uniform(0, 2 * math.pi))
-                dist = float(rng.uniform(4, 18 + 28 * charge))
+                dist = float(rng.uniform(8, reach))
                 self.sparks.emit(
                     Particle(
                         x=cx + math.cos(ang) * dist,
                         y=cy + math.sin(ang) * dist,
-                        vx=math.cos(ang) * 40,
-                        vy=math.sin(ang) * 40,
-                        radius=float(rng.uniform(0.8, 2.2)),
-                        life=float(rng.uniform(0.05, 0.18)),
-                        max_life=0.18,
+                        vx=math.cos(ang) * 55,
+                        vy=math.sin(ang) * 55,
+                        radius=float(rng.uniform(1.4, 3.4)),
+                        life=float(rng.uniform(0.06, 0.22)),
+                        max_life=0.22,
                         color=ARC if rng.random() > 0.35 else WHITE,
                     )
                 )
@@ -160,14 +162,17 @@ class Chidori:
     def _draw_hand_blade(self, layer, pose: AnimationPose, charge: float, rng) -> None:
         px, py = int(pose.palm[0]), int(pose.palm[1])
         tx, ty = int(pose.index_tip[0]), int(pose.index_tip[1])
-        radius = int(10 + 26 * charge)
-        flicker = 1 if rng.random() > 0.25 else 0
-        cv2.circle(layer, (tx, ty), radius + 3, INK, -1, cv2.LINE_AA)
+        radius = int(22 + pose.scale * 0.28 + 52 * charge)
+        flicker = 2 if rng.random() > 0.25 else 0
+        cv2.circle(layer, (tx, ty), radius + 10, INK, -1, cv2.LINE_AA)
+        cv2.circle(layer, (tx, ty), radius + 4, GLOW, 3, cv2.LINE_AA)
         cv2.circle(layer, (tx, ty), radius + flicker, CORE, -1, cv2.LINE_AA)
-        cv2.circle(layer, (tx, ty), max(4, radius // 3), WHITE, -1, cv2.LINE_AA)
-        for _ in range(int(6 + 10 * charge)):
+        cv2.circle(layer, (tx, ty), max(8, radius // 2), ARC, -1, cv2.LINE_AA)
+        cv2.circle(layer, (tx, ty), max(5, radius // 4), WHITE, -1, cv2.LINE_AA)
+        arcs = int(10 + 16 * charge)
+        for _ in range(arcs):
             ang = float(rng.uniform(0, 2 * math.pi))
-            length = float(rng.uniform(radius * 0.6, radius * 1.8))
+            length = float(rng.uniform(radius * 0.75, radius * 2.15))
             mid = (
                 int(tx + math.cos(ang) * length * 0.45),
                 int(ty + math.sin(ang) * length * 0.45),
@@ -176,32 +181,33 @@ class Chidori:
                 int(tx + math.cos(ang) * length),
                 int(ty + math.sin(ang) * length),
             )
-            cv2.line(layer, (tx, ty), mid, WHITE, 2, cv2.LINE_AA)
+            cv2.line(layer, (tx, ty), mid, WHITE, 3, cv2.LINE_AA)
             cv2.line(layer, mid, end, ARC, 2, cv2.LINE_AA)
-        cv2.line(layer, (px, py), (tx, ty), INK, 5, cv2.LINE_AA)
-        cv2.line(layer, (px, py), (tx, ty), CORE, 3, cv2.LINE_AA)
+        cv2.line(layer, (px, py), (tx, ty), INK, 8, cv2.LINE_AA)
+        cv2.line(layer, (px, py), (tx, ty), CORE, 5, cv2.LINE_AA)
+        cv2.line(layer, (px, py), (tx, ty), WHITE, 2, cv2.LINE_AA)
 
     def _draw_stream(self, layer, pose: AnimationPose, charge: float, rng) -> None:
         tx, ty = pose.index_tip
         ang = pose.angle
-        length = 90 + 220 * charge
-        segs = 10
+        length = 150 + 320 * charge + pose.scale * 0.9
+        segs = 12
         prev = (int(tx), int(ty))
+        thick = 8 if charge > 0.5 else 6
         for i in range(1, segs + 1):
             t = i / segs
-            wobble = math.sin(self.time * 40 + i) * (6 + 10 * charge)
+            wobble = math.sin(self.time * 40 + i) * (10 + 16 * charge)
             px = tx + math.cos(ang) * length * t + math.cos(ang + math.pi / 2) * wobble
             py = ty + math.sin(ang) * length * t + math.sin(ang + math.pi / 2) * wobble
             pt = (int(px), int(py))
-            cv2.line(layer, prev, pt, INK, 5, cv2.LINE_AA)
-            cv2.line(layer, prev, pt, WHITE if i % 2 == 0 else ARC, 2, cv2.LINE_AA)
+            cv2.line(layer, prev, pt, INK, thick + 2, cv2.LINE_AA)
+            cv2.line(layer, prev, pt, WHITE if i % 2 == 0 else ARC, thick - 3, cv2.LINE_AA)
             prev = pt
-        # Spear silhouette along the stream
         tip = (
             int(tx + math.cos(ang) * length),
             int(ty + math.sin(ang) * length),
         )
-        cv2.line(layer, (int(tx), int(ty)), tip, GLOW, 3, cv2.LINE_AA)
+        cv2.line(layer, (int(tx), int(ty)), tip, GLOW, 5, cv2.LINE_AA)
 
     def _draw_bolts(self, layer, rng) -> None:
         for bolt in self.bolts:
@@ -212,14 +218,13 @@ class Chidori:
             end = (int(bolt.x + dx * bolt.length), int(bolt.y + dy * bolt.length))
             color = WHITE if bolt.kind == "senbon" else ARC
             if bolt.kind == "spear":
-                cv2.line(layer, start, end, INK, bolt.width + 5, cv2.LINE_AA)
-                cv2.line(layer, start, end, CORE, bolt.width + 2, cv2.LINE_AA)
-                cv2.line(layer, start, end, WHITE, 1, cv2.LINE_AA)
-                # spear head
+                cv2.line(layer, start, end, INK, bolt.width + 7, cv2.LINE_AA)
+                cv2.line(layer, start, end, CORE, bolt.width + 3, cv2.LINE_AA)
+                cv2.line(layer, start, end, WHITE, 2, cv2.LINE_AA)
                 nx, ny = -dy, dx
                 head = end
-                left = (int(end[0] - dx * 16 + nx * 7), int(end[1] - dy * 16 + ny * 7))
-                right = (int(end[0] - dx * 16 - nx * 7), int(end[1] - dy * 16 - ny * 7))
+                left = (int(end[0] - dx * 24 + nx * 11), int(end[1] - dy * 24 + ny * 11))
+                right = (int(end[0] - dx * 24 - nx * 11), int(end[1] - dy * 24 - ny * 11))
                 cv2.fillConvexPoly(layer, np.array([head, left, right], dtype=np.int32), WHITE)
             elif bolt.kind == "stream":
                 wobble = int(rng.integers(-8, 9))
